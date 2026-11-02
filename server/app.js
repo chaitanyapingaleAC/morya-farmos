@@ -1,11 +1,14 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
+import express from "express";
+import cors from "cors";
+import cowRoutes from "./routes/cowRoutes.js";
+
 const app = express();
+
 app.use(cors());
 app.use(express.json());
-app.get("/api/test", (req, res) => {
-  res.json({ message: "Morya FarmOS backend is running" });
+
+app.use("/api/cows", cowRoutes);
+
+app.listen(5000, () => {
+    console.log("Server running on http://localhost:5000");
 });
-const port = process.env.PORT || 5000;
-app.listen(port, () => console.log(`Server running on http://localhost:${port}`));

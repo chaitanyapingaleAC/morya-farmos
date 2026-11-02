@@ -1,6 +1,7 @@
 {
   "name": "morya-farmos-server",
   "version": "0.1.0",
+  "type" : "module",
   "private": true,
   "main": "app.js",
   "scripts": {"start": "node app.js", "dev": "nodemon app.js"},
