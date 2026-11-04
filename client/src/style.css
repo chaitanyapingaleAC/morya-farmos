@@ -531,3 +531,439 @@ body {
         gap: 5px;
     }
 }
+
+
+
+/* =========================================
+   BREEDING MANAGEMENT PAGE
+========================================= */
+
+.breeding-page {
+    padding: 25px;
+    background: #F7F5EE;
+    min-height: 100vh;
+}
+
+.breeding-header {
+    margin-bottom: 25px;
+}
+
+.breeding-header h1 {
+    color: #173D32;
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.breeding-header p {
+    color: #666;
+    font-size: 14px;
+}
+
+/* Form and records cards */
+
+.breeding-card {
+    background: #FFFFFF;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+    margin-bottom: 25px;
+}
+
+.breeding-card h2 {
+    color: #173D32;
+    font-size: 21px;
+    margin-bottom: 20px;
+}
+
+/* Responsive form grid */
+
+.breeding-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.breeding-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.breeding-field label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.breeding-field input,
+.breeding-field select,
+.breeding-field textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+}
+
+.breeding-field input:focus,
+.breeding-field select:focus,
+.breeding-field textarea:focus {
+    outline: none;
+    border-color: #3F8B67;
+}
+
+.breeding-field-full {
+    grid-column: 1 / -1;
+}
+
+.breeding-field textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+/* Form buttons */
+
+.breeding-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 22px;
+    flex-wrap: wrap;
+}
+
+.breeding-save-btn {
+    background: #3F8B67;
+    color: white;
+    padding: 11px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.breeding-save-btn:hover {
+    background: #173D32;
+}
+
+.breeding-cancel-btn {
+    background: #E5E7EB;
+    color: #374151;
+    padding: 11px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* Records table */
+
+.breeding-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.breeding-table {
+    width: 100%;
+    min-width: 650px;
+    border-collapse: collapse;
+}
+
+.breeding-table th,
+.breeding-table td {
+    padding: 14px;
+    text-align: left;
+    border-bottom: 1px solid #E5E7EB;
+    font-size: 14px;
+}
+
+.breeding-table th {
+    background: #F9FAFB;
+    color: #4B5563;
+    font-weight: 600;
+}
+
+/* Pregnancy status badges */
+
+.breeding-status {
+    display: inline-block;
+    padding: 6px 11px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.breeding-status-pending {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.breeding-status-confirmed {
+    background: #DCFCE7;
+    color: #166534;
+}
+
+.breeding-status-not-pregnant {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+/* Table action buttons */
+
+.breeding-edit-btn,
+.breeding-delete-btn {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    margin-right: 6px;
+}
+
+.breeding-edit-btn {
+    background: #DBEAFE;
+    color: #1D4ED8;
+}
+
+.breeding-delete-btn {
+    background: #FEE2E2;
+    color: #B91C1C;
+}
+
+/* Messages */
+
+.breeding-message {
+    padding: 12px 16px;
+    background: #ECFDF5;
+    color: #166534;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+/* Mobile responsive */
+
+@media (max-width: 700px) {
+    .breeding-page {
+        padding: 15px;
+    }
+
+    .breeding-card {
+        padding: 16px;
+    }
+
+    .breeding-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+
+/* =========================================
+   COW MANAGEMENT PAGE
+========================================= */
+
+.cow-page {
+    padding: 25px;
+    background: #F7F5EE;
+    min-height: 100vh;
+}
+
+.cow-header {
+    margin-bottom: 25px;
+}
+
+.cow-header h1 {
+    color: #173D32;
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.cow-header p {
+    color: #666;
+    font-size: 14px;
+}
+
+/* White content cards */
+
+.cow-card {
+    background: #FFFFFF;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+    margin-bottom: 25px;
+}
+
+.cow-card h2 {
+    color: #173D32;
+    font-size: 21px;
+    margin-bottom: 20px;
+}
+
+/* Cow registration and edit form */
+
+.cow-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.cow-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cow-field label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.cow-field input:not([type="checkbox"]),
+.cow-field select,
+.cow-field textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+}
+
+.cow-field input:focus,
+.cow-field select:focus,
+.cow-field textarea:focus {
+    outline: none;
+    border-color: #3F8B67;
+}
+
+.cow-field-full {
+    grid-column: 1 / -1;
+}
+
+.cow-field textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.cow-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.cow-checkbox input {
+    width: 16px;
+    height: 16px;
+    accent-color: #3F8B67;
+}
+
+/* Buttons */
+
+.cow-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 22px;
+    flex-wrap: wrap;
+}
+
+.cow-save-btn {
+    background: #3F8B67;
+    color: white;
+    padding: 11px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.cow-save-btn:hover {
+    background: #173D32;
+}
+
+.cow-save-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.cow-cancel-btn {
+    background: #E5E7EB;
+    color: #374151;
+    padding: 11px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* Cow records table */
+
+.cow-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.cow-table {
+    width: 100%;
+    min-width: 650px;
+    border-collapse: collapse;
+}
+
+.cow-table th,
+.cow-table td {
+    padding: 14px;
+    text-align: left;
+    border-bottom: 1px solid #E5E7EB;
+    font-size: 14px;
+}
+
+.cow-table th {
+    background: #F9FAFB;
+    color: #4B5563;
+    font-weight: 600;
+}
+
+.cow-table tbody tr:hover {
+    background: #F9FAFB;
+}
+
+/* Edit and delete buttons */
+
+.cow-edit-btn,
+.cow-delete-btn {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    margin-right: 6px;
+}
+
+.cow-edit-btn {
+    background: #DBEAFE;
+    color: #1D4ED8;
+}
+
+.cow-delete-btn {
+    background: #FEE2E2;
+    color: #B91C1C;
+}
+
+/* Responsive layout */
+
+@media (max-width: 700px) {
+    .cow-page {
+        padding: 15px;
+    }
+
+    .cow-card {
+        padding: 16px;
+    }
+
+    .cow-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+

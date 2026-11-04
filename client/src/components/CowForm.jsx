@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 
 function CowForm() {
@@ -66,65 +67,102 @@ function CowForm() {
     };
 
     return (
-        <div>
+        <section className="cow-card">
             <h2>Register New Cow</h2>
 
             <form onSubmit={handleSubmit}>
-                <input
-                    name="cow_id"
-                    placeholder="Cow ID"
-                    value={cow.cow_id}
-                    onChange={handleChange}
-                    required
-                    maxLength={30}
-                />
+                <div className="cow-form-grid">
 
-                <input
-                    name="cow_name"
-                    placeholder="Cow Name"
-                    value={cow.cow_name}
-                    onChange={handleChange}
-                    required
-                    maxLength={100}
-                />
+                    <div className="cow-field">
+                        <label htmlFor="cow_id">Cow ID *</label>
+                        <input
+                            id="cow_id"
+                            name="cow_id"
+                            placeholder="e.g. MORYA003"
+                            value={cow.cow_id}
+                            onChange={handleChange}
+                            required
+                            maxLength={30}
+                        />
+                    </div>
 
-                <label>Date of Birth: </label>
-                <input
-                    type="date"
-                    name="date_of_birth"
-                    value={cow.date_of_birth}
-                    onChange={handleChange}
-                />
+                    <div className="cow-field">
+                        <label htmlFor="cow_name">Cow Name *</label>
+                        <input
+                            id="cow_name"
+                            name="cow_name"
+                            placeholder="Enter cow name"
+                            value={cow.cow_name}
+                            onChange={handleChange}
+                            required
+                            maxLength={100}
+                        />
+                    </div>
 
-                <label>
-                    <input
-                        type="checkbox"
-                        name="birth_date_is_estimated"
-                        checked={cow.birth_date_is_estimated}
-                        onChange={handleChange}
-                    />
-                    Birth Date Is Estimated
-                </label>
+                    <div className="cow-field">
+                        <label htmlFor="date_of_birth">
+                            Date of Birth
+                        </label>
+                        <input
+                            id="date_of_birth"
+                            type="date"
+                            name="date_of_birth"
+                            value={cow.date_of_birth}
+                            onChange={handleChange}
+                        />
+                    </div>
 
-                <input
-                    name="breed"
-                    placeholder="Breed"
-                    value={cow.breed}
-                    onChange={handleChange}
-                />
+                    <div className="cow-field">
+                        <label htmlFor="breed">Breed</label>
+                        <input
+                            id="breed"
+                            name="breed"
+                            placeholder="e.g. Gir, HF, Jersey"
+                            value={cow.breed}
+                            onChange={handleChange}
+                        />
+                    </div>
 
-                <textarea
-                    name="description"
-                    placeholder="Description"
-                    value={cow.description}
-                    onChange={handleChange}
-                />
+                    <div className="cow-field cow-field-full">
+                        <label className="cow-checkbox">
+                            <input
+                                type="checkbox"
+                                name="birth_date_is_estimated"
+                                checked={cow.birth_date_is_estimated}
+                                onChange={handleChange}
+                            />
+                            Birth Date Is Estimated
+                        </label>
+                    </div>
 
-                <button type="submit" disabled={submitting}>
-                    {submitting ? "Registering..." : "Register Cow"}
-                </button>
+                    <div className="cow-field cow-field-full">
+                        <label htmlFor="description">
+                            Description
+                        </label>
+                        <textarea
+                            id="description"
+                            name="description"
+                            placeholder="Enter additional information about the cow..."
+                            value={cow.description}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                </div>
+
+                <div className="cow-actions">
+                    <button
+                        type="submit"
+                        className="cow-save-btn"
+                        disabled={submitting}
+                    >
+                        {submitting
+                            ? "Registering..."
+                            : "Register Cow"}
+                    </button>
+                </div>
             </form>
-        </div>
+        </section>
     );
 }
 

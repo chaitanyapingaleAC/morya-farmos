@@ -10,16 +10,27 @@ import CowList from "./components/CowList.jsx";
 import MainLayout from "./components/MainLayout.jsx";
 import BreedingPage from "./pages/BreedingPage.jsx";
 
+
 function CowPage() {
-  return (
-    <div className="dashboard-page">
-      <h1>Cow Management</h1>
-      <CowForm />
-      <hr />
-      <CowList />
-    </div>
-  );
+    return (
+        <div className="cow-page">
+
+            <div className="cow-header">
+                <h1>Cow Management</h1>
+                <p>
+                    Register, view, update, and manage
+                    your dairy farm cows.
+                </p>
+            </div>
+
+            <CowForm />
+
+            <CowList />
+
+        </div>
+    );
 }
+
 
 export default function AppRoutes() {
   return (
