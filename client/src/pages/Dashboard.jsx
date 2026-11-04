@@ -16,11 +16,20 @@ function Dashboard() {
         const loadDashboardData = async () => {
             try {
                 // Both API requests run together to save time.
-                const [cowResponse, expenseResponse] =
-                    await Promise.all([
-                        fetch("http://localhost:5000/api/cows"),
-                        fetch("http://localhost:5000/api/expenses")
-                    ]);
+                const token = sessionStorage.getItem("authToken");
+
+                const [cowResponse, expenseResponse] = await Promise.all([
+                    fetch("http://localhost:5000/api/cows", {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }),
+                    fetch("http://localhost:5000/api/expenses", {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    })
+                ]);
 
                 if (!cowResponse.ok || !expenseResponse.ok) {
                     throw new Error("Failed to load dashboard data");
@@ -117,7 +126,7 @@ function Dashboard() {
                                     <tr key={expense.expense_id}>
                                         <td>{expense.expense_date}</td>
                                         <td>{expense.category}</td>
-                                        <td>₹{expense.amount}</td>
+                                        <td>₹{Number(expense.amount).toLocaleString("en-IN")}</td>
                                         <td>{expense.payment_mode}</td>
                                     </tr>
                                 ))}
