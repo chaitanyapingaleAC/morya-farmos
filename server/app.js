@@ -6,12 +6,28 @@ import dotenv from "dotenv";
 import db from "./config/db.js";
 import cowRoutes from "./routes/cowRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Origin not allowed by CORS"));
+    },
+  })
+);
 app.use(express.json());
 
 // Cow Management API
@@ -19,6 +35,9 @@ app.use("/api/cows", cowRoutes);
 
 // Expense Management API
 app.use("/api/expenses", expenseRoutes);
+
+// Authentication register user
+app.use("/api/auth", authRoutes);
 
 // Backend test
 app.get("/api/test", (req, res) => {

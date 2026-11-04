@@ -3,6 +3,8 @@ import db from "../config/db.js";
 
 // Add a new expense
 export const addExpense = async (req, res) => {
+    const farmId = req.user.farm_id;
+
     const {
         expense_date,
         category,
@@ -11,7 +13,15 @@ export const addExpense = async (req, res) => {
         description
     } = req.body;
 
-    if (!expense_date || !category || amount === undefined || !payment_mode) {
+    if (!farmId) {
+        return res.status(403).json({
+            success: false,
+            message: "No farm assigned to this user."
+        });
+    }
+
+    if (!expense_date || !category ||
+        amount === undefined || !payment_mode) {
         return res.status(400).json({
             success: false,
             message: "Please provide expense date, category, amount and payment mode."
@@ -30,11 +40,12 @@ export const addExpense = async (req, res) => {
     try {
         const sql = `
             INSERT INTO expenses
-            (expense_date, category, amount, payment_mode, description)
-            VALUES (?, ?, ?, ?, ?)
+            (farm_id, expense_date, category, amount, payment_mode, description)
+            VALUES (?, ?, ?, ?, ?, ?)
         `;
 
         const [result] = await db.query(sql, [
+            farmId,
             expense_date,
             category,
             numericAmount,
@@ -58,16 +69,25 @@ export const addExpense = async (req, res) => {
     }
 };
 
-
-// Get all expenses
+// Get all expenses for logged-in farm
 export const getExpenses = async (req, res) => {
+    const farmId = req.user.farm_id;
+
+    if (!farmId) {
+        return res.status(403).json({
+            success: false,
+            message: "No farm assigned to this user."
+        });
+    }
+
     try {
         const sql = `
             SELECT * FROM expenses
+            WHERE farm_id = ?
             ORDER BY expense_date DESC, expense_id DESC
         `;
 
-        const [results] = await db.query(sql);
+        const [results] = await db.query(sql, [farmId]);
 
         res.json({
             success: true,
@@ -84,13 +104,27 @@ export const getExpenses = async (req, res) => {
     }
 };
 
-
 // Get expense by ID
 export const getExpenseById = async (req, res) => {
-    try {
-        const sql = "SELECT * FROM expenses WHERE expense_id = ?";
+    const farmId = req.user.farm_id;
 
-        const [results] = await db.query(sql, [req.params.id]);
+    if (!farmId) {
+        return res.status(403).json({
+            success: false,
+            message: "No farm assigned to this user."
+        });
+    }
+
+    try {
+        const sql = `
+            SELECT * FROM expenses
+            WHERE expense_id = ? AND farm_id = ?
+        `;
+
+        const [results] = await db.query(sql, [
+            req.params.id,
+            farmId
+        ]);
 
         if (results.length === 0) {
             return res.status(404).json({
@@ -114,9 +148,10 @@ export const getExpenseById = async (req, res) => {
     }
 };
 
-
 // Update expense
 export const updateExpense = async (req, res) => {
+    const farmId = req.user.farm_id;
+
     const {
         expense_date,
         category,
@@ -125,7 +160,15 @@ export const updateExpense = async (req, res) => {
         description
     } = req.body;
 
-    if (!expense_date || !category || amount === undefined || !payment_mode) {
+    if (!farmId) {
+        return res.status(403).json({
+            success: false,
+            message: "No farm assigned to this user."
+        });
+    }
+
+    if (!expense_date || !category ||
+        amount === undefined || !payment_mode) {
         return res.status(400).json({
             success: false,
             message: "Please provide all required expense details."
@@ -149,7 +192,7 @@ export const updateExpense = async (req, res) => {
                 amount = ?,
                 payment_mode = ?,
                 description = ?
-            WHERE expense_id = ?
+            WHERE expense_id = ? AND farm_id = ?
         `;
 
         const [result] = await db.query(sql, [
@@ -158,7 +201,8 @@ export const updateExpense = async (req, res) => {
             numericAmount,
             payment_mode,
             description || null,
-            req.params.id
+            req.params.id,
+            farmId
         ]);
 
         if (result.affectedRows === 0) {
@@ -183,13 +227,27 @@ export const updateExpense = async (req, res) => {
     }
 };
 
-
 // Delete expense
 export const deleteExpense = async (req, res) => {
-    try {
-        const sql = "DELETE FROM expenses WHERE expense_id = ?";
+    const farmId = req.user.farm_id;
 
-        const [result] = await db.query(sql, [req.params.id]);
+    if (!farmId) {
+        return res.status(403).json({
+            success: false,
+            message: "No farm assigned to this user."
+        });
+    }
+
+    try {
+        const sql = `
+            DELETE FROM expenses
+            WHERE expense_id = ? AND farm_id = ?
+        `;
+
+        const [result] = await db.query(sql, [
+            req.params.id,
+            farmId
+        ]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({
