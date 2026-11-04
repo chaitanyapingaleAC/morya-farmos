@@ -39,6 +39,8 @@ function Sidebar() {
                     <span>Expense Management</span>
                 </NavLink>
 
+                
+
                 {/* Features planned for future development */}
                 <div className="sidebar-section-title">
                     MORE FEATURES
@@ -50,11 +52,10 @@ function Sidebar() {
                     <small>Soon</small>
                 </div>
 
-                <div className="sidebar-link sidebar-disabled">
-                    <Heart size={20} />
-                    <span>Breeding</span>
-                    <small>Soon</small>
-                </div>
+                <NavLink to="/breeding" className="sidebar-link">
+    <Heart size={20} />
+    <span>Breeding Management</span>
+</NavLink>
 
                 <div className="sidebar-link sidebar-disabled">
                     <FileText size={20} />

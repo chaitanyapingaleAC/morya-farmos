@@ -7,6 +7,7 @@ import db from "./config/db.js";
 import cowRoutes from "./routes/cowRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import breedingRoutes from "./routes/breedingRoutes.js";
 
 dotenv.config();
 
@@ -35,6 +36,9 @@ app.use("/api/cows", cowRoutes);
 
 // Expense Management API
 app.use("/api/expenses", expenseRoutes);
+
+// Breeding Management API
+app.use("/api/breeding", breedingRoutes);
 
 // Authentication register user
 app.use("/api/auth", authRoutes);

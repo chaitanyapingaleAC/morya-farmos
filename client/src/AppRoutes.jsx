@@ -8,6 +8,7 @@ import ExpensePage from "./pages/ExpensePage.jsx";
 import CowForm from "./components/CowForm.jsx";
 import CowList from "./components/CowList.jsx";
 import MainLayout from "./components/MainLayout.jsx";
+import BreedingPage from "./pages/BreedingPage.jsx";
 
 function CowPage() {
   return (
@@ -36,6 +37,7 @@ export default function AppRoutes() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/cows" element={<CowPage />} />
         <Route path="/expenses" element={<ExpensePage />} />
+        <Route path="/breeding" element={<BreedingPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
