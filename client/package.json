@@ -1,3 +1,4 @@
+
 {
   "name": "morya-farmos-client",
   "private": true,
@@ -9,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "lucide-react": "^1.66.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^7.18.5"
+    "react-router-dom": "^7.18.5",
+    "recharts": "^3.10.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.7.0",
