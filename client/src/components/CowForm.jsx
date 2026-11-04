@@ -1,35 +1,53 @@
-import { useState  } from "react";
+import { useState } from "react";
 
-function CowForm(){
-    const [cow,setcow] = useState({
-        cow_id:"", cow_name:"" , date_of_birth:"" , birt_date_is_estimated:false , breed:"" , description:""
+function CowForm() {
+    const [cow, setCow] = useState({
+        cow_id: "",
+        cow_name: "",
+        date_of_birth: "",
+        birth_date_is_estimated: false,
+        breed: "",
+        description: ""
     });
+
+    const [submitting, setSubmitting] = useState(false);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
 
-        if(e.target.type === "checkbox"){
-            setcow({
-                ...cow,[e.target.name] : e.target.checked
-            });
-        }else{
-            setcow({
-                ...cow,[e.target.name]:e.target.value
-            });
-        }
+        setCow((previous) => ({
+            ...previous,
+            [name]: type === "checkbox" ? checked : value
+        }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        const token = sessionStorage.getItem("authToken");
+
+        if (!token) {
+            alert("Session expired. Please log in again.");
+            return;
+        }
+
+        setSubmitting(true);
+
         try {
-            const response = await fetch("http://localhost:5000/api/cows", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(cow)
-            });
+            const response = await fetch(
+                "http://localhost:5000/api/cows",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        ...cow,
+                        date_of_birth: cow.date_of_birth || null
+                    })
+                }
+            );
 
             const data = await response.json();
 
@@ -39,9 +57,11 @@ function CowForm(){
             } else {
                 alert(data.message || "Registration failed");
             }
-
         } catch (error) {
+            console.error("Cow registration error:", error);
             alert("Unable to connect to server");
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -100,15 +120,12 @@ function CowForm(){
                     onChange={handleChange}
                 />
 
-                <button type="submit">Register Cow</button>
+                <button type="submit" disabled={submitting}>
+                    {submitting ? "Registering..." : "Register Cow"}
+                </button>
             </form>
         </div>
     );
-
-
-
-
 }
-
 
 export default CowForm;

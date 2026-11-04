@@ -2,15 +2,20 @@ import { useEffect, useState } from "react";
 
 function CowList() {
     const [cows, setCows] = useState([]);
-    const [loading, setloading] = useState([]);
-    const [error, setError] = useState([]);
-    const [editData , setEditData] = useState(null);
+    const [loading, setloading] = useState(true);
+    const [error, setError] = useState(null);
+    const [editData, setEditData] = useState(null);
 
     useEffect(() => {
         const fetchCow = async () => {
             try {
-                const response = await fetch("http://localhost:5000/api/cows");
-                if (!response.ok) {
+                const token = sessionStorage.getItem("authToken");
+
+                const response = await fetch("http://localhost:5000/api/cows", {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }); if (!response.ok) {
                     throw new Error("falied to fetch cow..");
                 }
                 const data = await response.json();
@@ -18,7 +23,7 @@ function CowList() {
 
 
             } catch (error) {
-                setError(error.messege);
+                setError(error.message);
 
             }
             finally {
@@ -29,75 +34,90 @@ function CowList() {
     }, []);
 
 
-  
 
 
 
 
-    const deleteCow = async (id) =>{
+
+    const deleteCow = async (id) => {
         const confirmDelete = window.confirm("Are you want to sure to delete this cow ? ");
-        if(!confirmDelete){
+        if (!confirmDelete) {
             return;
         }
 
         try {
-            const response = await fetch( `http://localhost:5000/api/cows/${id}`,{method:"DELETE"});
+
+            const token = sessionStorage.getItem("authToken");
+
+            const response = await fetch(
+                `http://localhost:5000/api/cows/${id}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
             const data = await response.json();
 
-            if(response.ok){
+            if (response.ok) {
                 alert("cow deleted succesfully");
-                setCows(cows.filter((cow)=> cow.cow_id !==id));
-            }else{
+                setCows(cows.filter((cow) => cow.cow_id !== id));
+            } else {
                 alert(data.messege || "delete failed");
             }
 
         } catch (error) {
             alert("unable to conenct server");
-            
+
         }
     }
 
 
-    const editCow = (cow)=>{
-        setEditData({...cow});
+    const editCow = (cow) => {
+        setEditData({ ...cow });
     };
 
 
-    
-const updateCow = async (e) => {
-    e.preventDefault();
 
-    try {
-        const response = await fetch(
-            `http://localhost:5000/api/cows/${editData.cow_id}`,
-            {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(editData)
+    const updateCow = async (e) => {
+        e.preventDefault();
+
+        try {
+            const token = sessionStorage.getItem("authToken");
+
+            const response = await fetch(
+                `http://localhost:5000/api/cows/${editData.cow_id}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify(editData)
+                }
+            );
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert("Cow updated successfully");
+
+                setCows(cows.map((cow) =>
+                    cow.cow_id === editData.cow_id
+                        ? { ...editData }
+                        : cow
+                ));
+
+                setEditData(null);
+            } else {
+                alert(data.message || "Update failed");
             }
-        );
-
-        const data = await response.json();
-
-        if (response.ok) {
-            alert("Cow updated successfully");
-
-            setCows(cows.map((cow) =>
-                cow.cow_id === editData.cow_id
-                    ? { ...editData }
-                    : cow
-            ));
-
-            setEditData(null);
-        } else {
-            alert(data.message || "Update failed");
+        } catch (error) {
+            alert("Unable to connect to server");
         }
-    } catch (error) {
-        alert("Unable to connect to server");
-    }
-};
+    };
 
 
 
@@ -106,13 +126,13 @@ const updateCow = async (e) => {
         return <p>Loading cows....</p>
     }
     if (error) {
-        <p>something went wrong....</p>
+        return <p>Error: {error}</p>;
     }
 
 
 
     return (
-        
+
         <div>
 
 
