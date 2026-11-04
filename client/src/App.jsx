@@ -1,24 +1,58 @@
 
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
 import CowForm from "./components/CowForm";
 import CowList from "./components/CowList";
 import ExpensePage from "./pages/ExpensePage";
+import Dashboard from "./pages/Dashboard";
+import MainLayout from "./components/MainLayout";
 
-function App() {
+// Cow Management page
+function CowPage() {
     return (
-        <div>
-            <h1>Morya FarmCare</h1>
-            <p>Cattle Lifecycle and Expense Management System</p>
-
-            <h2>Cow Management</h2>
+        <div className="dashboard-page">
+            <h1>Cow Management</h1>
             <CowForm />
             <hr />
             <CowList />
-
-            <hr />
-
-            <h2>Expense Management</h2>
-            <ExpensePage />
         </div>
+    );
+}
+
+// Main application routing
+function App() {
+    return (
+        <BrowserRouter>
+            <Routes>
+
+                {/* All main pages share the same sidebar layout */}
+                <Route element={<MainLayout />}>
+
+                    {/* Redirect home page to dashboard */}
+                    <Route
+                        path="/"
+                        element={<Navigate to="/dashboard" replace />}
+                    />
+
+                    {/* Dashboard */}
+                    <Route path="/dashboard" element={<Dashboard />} />
+
+                    {/* Cow Management */}
+                    <Route path="/cows" element={<CowPage />} />
+
+                    {/* Expense Management */}
+                    <Route path="/expenses" element={<ExpensePage />} />
+
+                </Route>
+
+                {/* Redirect unknown URLs to dashboard */}
+                <Route
+                    path="*"
+                    element={<Navigate to="/dashboard" replace />}
+                />
+
+            </Routes>
+        </BrowserRouter>
     );
 }
 
