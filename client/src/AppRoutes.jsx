@@ -9,6 +9,7 @@ import CowForm from "./components/CowForm.jsx";
 import CowList from "./components/CowList.jsx";
 import MainLayout from "./components/MainLayout.jsx";
 import BreedingPage from "./pages/BreedingPage.jsx";
+import AdminFarms from "./pages/AdminFarms.jsx";
 
 
 function CowPage() {
@@ -32,14 +33,26 @@ function CowPage() {
 }
 
 
+
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
 
+      {/* Super Admin only */}
+      <Route
+        path="/admin/farms"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminFarms />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Farm owners only */}
       <Route
         element={
-          <ProtectedRoute allowedRoles={["admin", "user"]}>
+          <ProtectedRoute allowedRoles={["user"]}>
             <MainLayout />
           </ProtectedRoute>
         }
@@ -51,7 +64,7 @@ export default function AppRoutes() {
         <Route path="/breeding" element={<BreedingPage />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

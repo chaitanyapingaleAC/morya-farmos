@@ -1,0 +1,62 @@
+
+/* Super Admin Panel */
+
+.admin-page {
+    font-family: Arial, sans-serif;
+    color: #1e293b;
+}
+
+.admin-page h1 {
+    color: #1e3a8a;
+    font-size: 26px;
+}
+
+.admin-page h2 {
+    margin-top: 30px;
+}
+
+.admin-page form {
+    display: grid;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.admin-page input {
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.admin-page button {
+    padding: 11px 18px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.admin-page button:hover {
+    background: #1d4ed8;
+}
+
+.admin-page button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.admin-page table th {
+    background: #eff6ff;
+}
+
+.admin-page table td {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-page table tr:hover {
+    background: #f8fafc;
+}

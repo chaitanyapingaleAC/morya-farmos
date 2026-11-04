@@ -39,7 +39,14 @@ export default function Login() {
       // Notify the parent application about login.
       window.dispatchEvent(new Event("auth-changed"));
 
-      navigate("/", { replace: true });
+      if (data.user?.role === "admin") {
+        navigate("/admin/farms", { replace: true });
+      } else if (data.user?.role === "user") {
+        navigate("/dashboard", { replace: true });
+      } else {
+        throw new Error("Unknown account role.");
+      }
+
     } catch (err) {
       setError(err.message || "Unable to connect to server.");
     } finally {

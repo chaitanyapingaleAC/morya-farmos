@@ -8,6 +8,9 @@ import cowRoutes from "./routes/cowRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import breedingRoutes from "./routes/breedingRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+
+
 
 dotenv.config();
 
@@ -42,6 +45,11 @@ app.use("/api/breeding", breedingRoutes);
 
 // Authentication register user
 app.use("/api/auth", authRoutes);
+
+
+// Super Admin Management API
+app.use("/api/admin", adminRoutes);
+
 
 // Backend test
 app.get("/api/test", (req, res) => {
