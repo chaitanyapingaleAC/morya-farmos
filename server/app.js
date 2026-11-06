@@ -1,4 +1,3 @@
-
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -6,12 +5,31 @@ import dotenv from "dotenv";
 import db from "./config/db.js";
 import cowRoutes from "./routes/cowRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
+import breedingRoutes from "./routes/breedingRoutes.js";
+import milkRoutes from "./routes/milkRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:3000"
+];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Origin not allowed by CORS"));
+    },
+  })
+);
 app.use(express.json());
 
 // Cow Management API
@@ -19,6 +37,18 @@ app.use("/api/cows", cowRoutes);
 
 // Expense Management API
 app.use("/api/expenses", expenseRoutes);
+
+// Breeding Management API
+app.use("/api/breeding", breedingRoutes);
+
+// Milk Production & Sales API
+app.use("/api/milk", milkRoutes);
+
+// Authentication API
+app.use("/api/auth", authRoutes);
+
+// Super Admin Management API
+app.use("/api/admin", adminRoutes);
 
 // Backend test
 app.get("/api/test", (req, res) => {
@@ -40,7 +70,8 @@ app.get("/api/db-test", async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: "Database query failed"
+            message: "Database query failed",
+            error: error.message
         });
     }
 });
