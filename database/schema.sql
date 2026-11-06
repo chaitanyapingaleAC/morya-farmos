@@ -86,3 +86,21 @@ CREATE TABLE IF NOT EXISTS expenses (
 
     PRIMARY KEY (expense_id)
 ) ENGINE=InnoDB;
+
+-- =====================================
+-- 6. Milk Records
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS milk_records (
+    record_id INT NOT NULL AUTO_INCREMENT,
+    farm_id INT NOT NULL,
+    record_date DATE NOT NULL,
+    session VARCHAR(20) NOT NULL DEFAULT 'Morning',
+    quantity DECIMAL(8,2) NOT NULL,
+    amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    notes VARCHAR(255) DEFAULT NULL,
+
+    PRIMARY KEY (record_id)
+) ENGINE=InnoDB;
+
+ ALTER TABLE milk_records ADD COLUMN amount DECIMAL(10,2) NOT NULL DEFAULT 0.00;

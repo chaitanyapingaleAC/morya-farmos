@@ -1,22 +1,21 @@
-
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import TopBar from "./TopBar";
+import Footer from "./Footer";
 
 function MainLayout() {
     return (
         <div className="main-layout">
-
-            {/* Sidebar navigation stays visible on every page */}
             <Sidebar />
-
-            {/* The selected route's page appears here */}
-            <main className="main-content">
-                <Outlet />
-            </main>
-
+            <div className="main-wrapper">
+                <TopBar />
+                <main className="main-content">
+                    <Outlet />
+                </main>
+                <Footer />
+            </div>
         </div>
     );
 }
 
 export default MainLayout;
-

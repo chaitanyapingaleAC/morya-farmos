@@ -1,10 +1,9 @@
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { Search, Edit2, Trash2, X, AlertCircle, CheckCircle } from "lucide-react";
 
 const API_URL = "http://localhost:5000/api/cows";
 
-const formatDate = (date) =>
-    date ? String(date).slice(0, 10) : "";
+const formatDate = (date) => (date ? String(date).slice(0, 10) : "");
 
 function CowList() {
     const [cows, setCows] = useState([]);
@@ -12,38 +11,53 @@ function CowList() {
     const [error, setError] = useState(null);
     const [editData, setEditData] = useState(null);
     const [saving, setSaving] = useState(false);
+    const [toast, setToast] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const showToast = (message, type = "success") => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3500);
+    };
 
     const getHeaders = () => ({
         Authorization: `Bearer ${sessionStorage.getItem("authToken")}`
     });
 
-    useEffect(() => {
-        const fetchCows = async () => {
-            try {
-                const response = await fetch(API_URL, {
-                    headers: getHeaders()
-                });
+    const fetchCows = async () => {
+        try {
+            const response = await fetch(API_URL, {
+                headers: getHeaders()
+            });
 
-                if (!response.ok) {
-                    throw new Error("Failed to fetch cows.");
-                }
-
-                const data = await response.json();
-
-                setCows(Array.isArray(data) ? data : []);
-            } catch (error) {
-                setError(error.message);
-            } finally {
-                setLoading(false);
+            if (!response.ok) {
+                throw new Error("Failed to fetch cows.");
             }
+
+            const data = await response.json();
+            setCows(Array.isArray(data) ? data : []);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchCows();
+
+        // Listen for new cows added from CowForm
+        const handleCowAdded = () => {
+            fetchCows();
+            showToast("New cow registered successfully!");
         };
 
-        fetchCows();
+        window.addEventListener("cow-added", handleCowAdded);
+        return () => window.removeEventListener("cow-added", handleCowAdded);
     }, []);
 
     const deleteCow = async (id) => {
         const confirmDelete = window.confirm(
-            "Are you sure you want to delete this cow?"
+            `Are you sure you want to delete cow #${id}?`
         );
 
         if (!confirmDelete) return;
@@ -63,13 +77,10 @@ function CowList() {
                 throw new Error(data.message || "Delete failed");
             }
 
-            setCows((previous) =>
-                previous.filter((cow) => cow.cow_id !== id)
-            );
-
-            alert("Cow deleted successfully!");
-        } catch (error) {
-            alert(error.message);
+            setCows((prev) => prev.filter((cow) => cow.cow_id !== id));
+            showToast(`Cow #${id} deleted successfully.`);
+        } catch (err) {
+            showToast(err.message, "error");
         }
     };
 
@@ -77,23 +88,20 @@ function CowList() {
         setEditData({
             ...cow,
             date_of_birth: formatDate(cow.date_of_birth),
-            birth_date_is_estimated:
-                Boolean(cow.birth_date_is_estimated)
+            birth_date_is_estimated: Boolean(cow.birth_date_is_estimated)
         });
     };
 
     const handleEditChange = (event) => {
         const { name, value, type, checked } = event.target;
-
-        setEditData((previous) => ({
-            ...previous,
+        setEditData((prev) => ({
+            ...prev,
             [name]: type === "checkbox" ? checked : value
         }));
     };
 
     const updateCow = async (event) => {
         event.preventDefault();
-
         if (!editData) return;
 
         setSaving(true);
@@ -109,8 +117,7 @@ function CowList() {
                     },
                     body: JSON.stringify({
                         ...editData,
-                        date_of_birth:
-                            editData.date_of_birth || null
+                        date_of_birth: editData.date_of_birth || null
                     })
                 }
             );
@@ -121,27 +128,37 @@ function CowList() {
                 throw new Error(data.message || "Update failed");
             }
 
-            setCows((previous) =>
-                previous.map((cow) =>
-                    cow.cow_id === editData.cow_id
-                        ? { ...editData }
-                        : cow
+            setCows((prev) =>
+                prev.map((cow) =>
+                    cow.cow_id === editData.cow_id ? { ...editData } : cow
                 )
             );
 
             setEditData(null);
-            alert("Cow updated successfully!");
-        } catch (error) {
-            alert(error.message);
+            showToast(`Cow #${editData.cow_id} updated successfully!`);
+        } catch (err) {
+            showToast(err.message, "error");
         } finally {
             setSaving(false);
         }
     };
 
+    const filteredCows = useMemo(() => {
+        if (!searchQuery.trim()) return cows;
+        const q = searchQuery.toLowerCase();
+        return cows.filter(
+            (c) =>
+                (c.cow_id || "").toLowerCase().includes(q) ||
+                (c.cow_name || "").toLowerCase().includes(q) ||
+                (c.breed || "").toLowerCase().includes(q) ||
+                (c.description || "").toLowerCase().includes(q)
+        );
+    }, [cows, searchQuery]);
+
     if (loading) {
         return (
             <section className="cow-card">
-                <p>Loading cows...</p>
+                <p>Loading cattle herd...</p>
             </section>
         );
     }
@@ -156,154 +173,191 @@ function CowList() {
 
     return (
         <>
+            {/* Notification Toast */}
+            {toast && (
+                <div className={`toast-notification toast-${toast.type}`}>
+                    <span>{toast.message}</span>
+                    <button onClick={() => setToast(null)} className="toast-close">
+                        <X size={14} />
+                    </button>
+                </div>
+            )}
+
+            {/* In-place Edit Form Modal */}
             {editData && (
-                <section className="cow-card">
-                    <h2>Edit Cow</h2>
+                <div className="modal-backdrop" onClick={() => setEditData(null)}>
+                    <div
+                        className="modal-content"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="modal-header">
+                            <h2>Edit Cow #{editData.cow_id}</h2>
+                            <button
+                                onClick={() => setEditData(null)}
+                                className="modal-close-btn"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
 
-                    <form onSubmit={updateCow}>
-                        <div className="cow-form-grid">
+                        <form onSubmit={updateCow} className="modal-form">
+                            <div className="form-row-2">
+                                <div className="form-field">
+                                    <label>Cow Tag / ID</label>
+                                    <input value={editData.cow_id} disabled />
+                                </div>
 
-                            <div className="cow-field">
-                                <label>Cow ID</label>
-                                <input
-                                    value={editData.cow_id}
-                                    disabled
-                                />
+                                <div className="form-field">
+                                    <label htmlFor="edit_cow_name">Cow Name *</label>
+                                    <input
+                                        id="edit_cow_name"
+                                        name="cow_name"
+                                        value={editData.cow_name || ""}
+                                        onChange={handleEditChange}
+                                        required
+                                        maxLength={100}
+                                    />
+                                </div>
                             </div>
 
-                            <div className="cow-field">
-                                <label htmlFor="edit_cow_name">
-                                    Cow Name *
-                                </label>
-                                <input
-                                    id="edit_cow_name"
-                                    name="cow_name"
-                                    value={editData.cow_name || ""}
-                                    onChange={handleEditChange}
-                                    required
-                                    maxLength={100}
-                                />
+                            <div className="form-row-2">
+                                <div className="form-field">
+                                    <label htmlFor="edit_breed">Breed</label>
+                                    <input
+                                        id="edit_breed"
+                                        name="breed"
+                                        value={editData.breed || ""}
+                                        onChange={handleEditChange}
+                                    />
+                                </div>
+
+                                <div className="form-field">
+                                    <label htmlFor="edit_date_of_birth">Date of Birth</label>
+                                    <input
+                                        id="edit_date_of_birth"
+                                        type="date"
+                                        name="date_of_birth"
+                                        value={editData.date_of_birth || ""}
+                                        onChange={handleEditChange}
+                                    />
+                                </div>
                             </div>
 
-                            <div className="cow-field">
-                                <label htmlFor="edit_date_of_birth">
-                                    Date of Birth
-                                </label>
-                                <input
-                                    id="edit_date_of_birth"
-                                    type="date"
-                                    name="date_of_birth"
-                                    value={editData.date_of_birth || ""}
-                                    onChange={handleEditChange}
-                                />
-                            </div>
-
-                            <div className="cow-field">
-                                <label htmlFor="edit_breed">
-                                    Breed
-                                </label>
-                                <input
-                                    id="edit_breed"
-                                    name="breed"
-                                    value={editData.breed || ""}
-                                    onChange={handleEditChange}
-                                />
-                            </div>
-
-                            <div className="cow-field cow-field-full">
-                                <label className="cow-checkbox">
+                            <div className="form-field">
+                                <label className="checkbox-container">
                                     <input
                                         type="checkbox"
                                         name="birth_date_is_estimated"
-                                        checked={Boolean(
-                                            editData.birth_date_is_estimated
-                                        )}
+                                        checked={Boolean(editData.birth_date_is_estimated)}
                                         onChange={handleEditChange}
                                     />
-                                    Birth Date Is Estimated
+                                    <span>Birth date is estimated</span>
                                 </label>
                             </div>
 
-                            <div className="cow-field cow-field-full">
-                                <label htmlFor="edit_description">
-                                    Description
-                                </label>
+                            <div className="form-field">
+                                <label htmlFor="edit_description">Description / Notes</label>
                                 <textarea
                                     id="edit_description"
                                     name="description"
+                                    rows={2}
                                     value={editData.description || ""}
                                     onChange={handleEditChange}
                                 />
                             </div>
 
-                        </div>
-
-                        <div className="cow-actions">
-                            <button
-                                type="submit"
-                                className="cow-save-btn"
-                                disabled={saving}
-                            >
-                                {saving
-                                    ? "Saving..."
-                                    : "Save Changes"}
-                            </button>
-
-                            <button
-                                type="button"
-                                className="cow-cancel-btn"
-                                onClick={() => setEditData(null)}
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </form>
-                </section>
+                            <div className="modal-actions">
+                                <button
+                                    type="button"
+                                    className="btn-secondary"
+                                    onClick={() => setEditData(null)}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn-primary"
+                                    disabled={saving}
+                                >
+                                    {saving ? "Saving..." : "Save Changes"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             )}
 
+            {/* Cows Table Section */}
             <section className="cow-card">
-                <h2>Registered Cows ({cows.length})</h2>
+                <div className="cow-table-toolbar">
+                    <h2>Registered Herd ({cows.length} Cows)</h2>
 
-                {cows.length === 0 ? (
-                    <p>No cows registered yet.</p>
+                    <div className="search-box">
+                        <Search size={16} className="search-icon" />
+                        <input
+                            type="text"
+                            placeholder="Search by tag, name, breed..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                {filteredCows.length === 0 ? (
+                    <p className="empty-message">
+                        {searchQuery ? "No cows match your search." : "No cows registered yet."}
+                    </p>
                 ) : (
                     <div className="cow-table-wrap">
                         <table className="cow-table">
                             <thead>
                                 <tr>
-                                    <th>Cow ID</th>
-                                    <th>Name</th>
+                                    <th>Tag / ID</th>
+                                    <th>Cow Name</th>
                                     <th>Breed</th>
-                                    <th>Description</th>
-                                    <th>Actions</th>
+                                    <th>Date of Birth</th>
+                                    <th>Notes</th>
+                                    <th className="th-actions">Actions</th>
                                 </tr>
                             </thead>
-
                             <tbody>
-                                {cows.map((cow) => (
+                                {filteredCows.map((cow) => (
                                     <tr key={cow.cow_id}>
-                                        <td>{cow.cow_id}</td>
-                                        <td>{cow.cow_name}</td>
-                                        <td>{cow.breed || "-"}</td>
-                                        <td>{cow.description || "-"}</td>
+                                        <td className="font-semibold text-green">
+                                            #{cow.cow_id}
+                                        </td>
+                                        <td className="font-medium">{cow.cow_name}</td>
+                                        <td>{cow.breed || "—"}</td>
                                         <td>
-                                            <button
-                                                type="button"
-                                                className="cow-edit-btn"
-                                                onClick={() => editCow(cow)}
-                                            >
-                                                Edit
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                className="cow-delete-btn"
-                                                onClick={() =>
-                                                    deleteCow(cow.cow_id)
-                                                }
-                                            >
-                                                Delete
-                                            </button>
+                                            {cow.date_of_birth
+                                                ? formatDate(cow.date_of_birth)
+                                                : "—"}
+                                            {Boolean(cow.birth_date_is_estimated) && (
+                                                <small className="estimated-tag"> (Est.)</small>
+                                            )}
+                                        </td>
+                                        <td className="notes-col text-muted">
+                                            {cow.description || "—"}
+                                        </td>
+                                        <td>
+                                            <div className="td-actions">
+                                                <button
+                                                    type="button"
+                                                    className="action-btn action-edit"
+                                                    onClick={() => editCow(cow)}
+                                                    title="Edit"
+                                                >
+                                                    <Edit2 size={14} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="action-btn action-delete"
+                                                    onClick={() => deleteCow(cow.cow_id)}
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
