@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lock, Mail, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
+import { ShieldCheck, Mail, Lock, ArrowRight, Sparkles, UserCheck } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (event) => {
-    if (event) event.preventDefault();
+  // Form submit handler
+  const handleLogin = async (e) => {
+    e.preventDefault();
     setError("");
     setLoading(true);
 
@@ -18,33 +19,42 @@ export default function Login() {
       const response = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password })
       });
 
       const data = await response.json();
 
-      if (!response.ok || !data.token) {
-        throw new Error(data.message || "Invalid credentials. Please try again.");
-      }
+      if (response.ok && data.token) {
+        // Save token and user role in session storage
+        sessionStorage.setItem("authToken", data.token);
+        sessionStorage.setItem("userRole", data.user?.role || "user");
+        sessionStorage.setItem("userName", data.user?.full_name || "User");
 
-      sessionStorage.setItem("authToken", data.token);
-      window.dispatchEvent(new Event("auth-changed"));
-
-      if (data.user?.role === "admin") {
-        navigate("/admin/farms", { replace: true });
-      } else if (data.user?.role === "user") {
-        navigate("/dashboard", { replace: true });
+        // Route by role: admin goes to AdminFarms, farm user goes to Dashboard
+        if (data.user?.role === "admin") {
+          navigate("/admin/farms", { replace: true });
+        } else {
+          navigate("/dashboard", { replace: true });
+        }
       } else {
-        throw new Error("Unknown account role.");
+        setError(data.message || "Invalid email or password");
       }
     } catch (err) {
-      setError(err.message || "Unable to connect to server.");
+      setError("Unable to connect to server. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleQuickDemoFill = () => {
+  // Helper to fill Admin credentials
+  const fillAdminAccount = () => {
+    setEmail("admin@morya.com");
+    setPassword("Password1234!");
+    setError("");
+  };
+
+  // Helper to fill Farm Owner credentials
+  const fillOwnerAccount = () => {
     setEmail("owner@morya.com");
     setPassword("Password1234!");
     setError("");
@@ -53,91 +63,81 @@ export default function Login() {
   return (
     <div className="login-screen-wrapper">
       <div className="login-card-container">
-        {/* Brand header */}
+        {/* Header */}
         <div className="login-header">
           <div className="login-logo-circle">
             <ShieldCheck size={30} />
           </div>
           <h1>Morya FarmCare</h1>
-          <p>Dairy Farm Operating System</p>
+          <p>Dairy Farm Management System</p>
         </div>
 
-        {/* Demo Quick-Fill Pill */}
+        {/* Demo Credentials Helpers */}
         <div className="demo-helper-box">
           <div className="demo-helper-text">
             <Sparkles size={14} className="sparkle-icon" />
-            <span>Need sample credentials?</span>
+            <span>Quick Demo Credentials:</span>
           </div>
-          <button
-            type="button"
-            onClick={handleQuickDemoFill}
-            className="demo-fill-btn"
-          >
-            Fill Demo Account
-          </button>
+          <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
+            <button
+              type="button"
+              onClick={fillOwnerAccount}
+              className="demo-fill-btn"
+              title="Login as Farm Owner"
+            >
+              Farm Owner
+            </button>
+            <button
+              type="button"
+              onClick={fillAdminAccount}
+              className="demo-fill-btn"
+              style={{ background: "#1e3a8a", borderColor: "#1e3a8a" }}
+              title="Login as Super Admin"
+            >
+              Super Admin
+            </button>
+          </div>
         </div>
 
-        {error && (
-          <div className="login-error-alert" role="alert">
-            {error}
-          </div>
-        )}
+        {error && <div className="login-error-alert">{error}</div>}
 
+        {/* Login Form */}
         <form onSubmit={handleLogin} className="login-form">
           <div className="form-group-login">
-            <label htmlFor="login-email">Email Address</label>
+            <label htmlFor="email">Email Address</label>
             <div className="input-with-icon">
               <Mail size={17} className="input-icon" />
               <input
-                id="login-email"
+                id="email"
                 type="email"
-                placeholder="e.g. owner@morya.com"
+                placeholder="e.g. admin@morya.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                autoComplete="username"
               />
             </div>
           </div>
 
           <div className="form-group-login">
-            <label htmlFor="login-password">Password</label>
+            <label htmlFor="password">Password</label>
             <div className="input-with-icon">
               <Lock size={17} className="input-icon" />
               <input
-                id="login-password"
+                id="password"
                 type="password"
-                placeholder="Enter account password"
+                placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                autoComplete="current-password"
               />
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="login-submit-btn"
-            disabled={loading}
-          >
-            {loading ? (
-              "Authenticating..."
-            ) : (
-              <>
-                <span>Sign In to Farm</span>
-                <ArrowRight size={17} />
-              </>
-            )}
+          <button type="submit" className="login-submit-btn" disabled={loading}>
+            <span>{loading ? "Signing in..." : "Sign In to FarmCare"}</span>
+            <ArrowRight size={17} />
           </button>
         </form>
-
-        <div className="login-footer">
-          <div className="security-note">
-            <ShieldCheck size={14} />
-            <span>Protected with JWT & Role-Based Farm Isolation</span>
-          </div>
-        </div>
       </div>
     </div>
   );

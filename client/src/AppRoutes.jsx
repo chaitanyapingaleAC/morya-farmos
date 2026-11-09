@@ -1,58 +1,14 @@
-import { useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { Plus, X } from "lucide-react";
 
 import Login from "./pages/Login.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import Dashboard from "./pages/Dashboard.jsx";
-import ExpensePage from "./pages/ExpensePage.jsx";
-import CowForm from "./components/CowForm.jsx";
-import CowList from "./components/CowList.jsx";
 import MainLayout from "./components/MainLayout.jsx";
-import AdminFarms from "./pages/AdminFarms.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import CowPage from "./pages/CowPage.jsx";
+import ExpensePage from "./pages/ExpensePage.jsx";
 import AboutPage from "./pages/AboutPage.jsx";
 import ContactPage from "./pages/ContactPage.jsx";
-
-// Cow Management View: Contains header button, Add Cow form, and Cow Table
-function CowPage() {
-  const [showForm, setShowForm] = useState(false);
-
-  return (
-    <div className="cow-page">
-      <div className="cow-header">
-        <div>
-          <h1>Cow Management</h1>
-          <p>Register, view, update, and manage your dairy farm herd.</p>
-        </div>
-        <button
-          onClick={() => setShowForm((prev) => !prev)}
-          className="btn-primary"
-        >
-          {showForm ? (
-            <>
-              <X size={17} /> Close Form
-            </>
-          ) : (
-            <>
-              <Plus size={17} /> Register New Cow
-            </>
-          )}
-        </button>
-      </div>
-
-      {showForm && (
-        <div style={{ marginBottom: 24 }}>
-          <CowForm
-            onSuccess={() => setShowForm(false)}
-            onCancel={() => setShowForm(false)}
-          />
-        </div>
-      )}
-
-      <CowList />
-    </div>
-  );
-}
+import AdminFarms from "./pages/AdminFarms.jsx";
 
 export default function AppRoutes() {
   return (
@@ -60,7 +16,7 @@ export default function AppRoutes() {
       {/* Public Login Route */}
       <Route path="/login" element={<Login />} />
 
-      {/* Super Admin Route */}
+      {/* Super Admin Route (Only accessible by 'admin' role) */}
       <Route
         path="/admin/farms"
         element={
@@ -70,7 +26,7 @@ export default function AppRoutes() {
         }
       />
 
-      {/* Farm Owner Application Routes */}
+      {/* Farm Owner Application Pages (Only accessible by 'user' role) */}
       <Route
         element={
           <ProtectedRoute allowedRoles={["user"]}>
@@ -86,7 +42,7 @@ export default function AppRoutes() {
         <Route path="/contact" element={<ContactPage />} />
       </Route>
 
-      {/* Fallback route */}
+      {/* Fallback Catch-all Route */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );

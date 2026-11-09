@@ -55,3 +55,16 @@ CREATE TABLE IF NOT EXISTS expenses (
     description TEXT,
     PRIMARY KEY (expense_id)
 ) ENGINE=InnoDB;
+
+-- =====================================
+-- 5. Default Seed Accounts (Password: Password1234!)
+-- =====================================
+INSERT INTO farms (farm_id, farm_name) 
+VALUES (1, 'Morya Model Dairy Farm')
+ON DUPLICATE KEY UPDATE farm_name=VALUES(farm_name);
+
+INSERT INTO users (user_id, full_name, email, password_hash, role, farm_id)
+VALUES 
+  (1, 'Super Admin', 'admin@morya.com', '$2b$12$MzJcZKhtysgPRpFyiMe8IuvmAha4LUV9ITL3NyNHc1Ir/BB15Q/3u', 'admin', NULL),
+  (2, 'Farm Owner', 'owner@morya.com', '$2b$12$MzJcZKhtysgPRpFyiMe8IuvmAha4LUV9ITL3NyNHc1Ir/BB15Q/3u', 'user', 1)
+ON DUPLICATE KEY UPDATE full_name=VALUES(full_name);
