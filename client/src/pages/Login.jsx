@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Milk, Lock, Mail, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
+import { Lock, Mail, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -56,7 +56,7 @@ export default function Login() {
         {/* Brand header */}
         <div className="login-header">
           <div className="login-logo-circle">
-            <Milk size={30} />
+            <ShieldCheck size={30} />
           </div>
           <h1>Morya FarmCare</h1>
           <p>Dairy Farm Operating System</p>

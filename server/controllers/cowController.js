@@ -1,238 +1,149 @@
-
 import db from "../config/db.js";
 
-// Check that the logged-in farm owner has a valid farm
+// Helper function to extract farm_id from logged-in user token
 const getFarmId = (req, res) => {
-    const farmId = req.user?.farm_id;
-
-    if (!Number.isSafeInteger(Number(farmId)) ||
-        Number(farmId) <= 0 ||
-        farmId == null) {
-        res.status(403).json({
-            message: "No valid farm assigned to this account"
-        });
-        return null;
-    }
-
-    return Number(farmId);
+  const farmId = req.user?.farm_id;
+  if (!farmId) {
+    res.status(403).json({ message: "No farm assigned to this account" });
+    return null;
+  }
+  return Number(farmId);
 };
 
-// Add cow to logged-in owner's farm
-const addCow = async (req, res) => {
-    const farmId = getFarmId(req, res);
-    if (farmId === null) return;
+// 1. Add a new cow
+export const addCow = async (req, res) => {
+  const farmId = getFarmId(req, res);
+  if (farmId === null) return;
 
-    try {
-        const {
-            cow_id,
-            cow_name,
-            date_of_birth,
-            birth_date_is_estimated,
-            breed,
-            description
-        } = req.body;
+  try {
+    const { cow_id, cow_name, date_of_birth, birth_date_is_estimated, breed, description } = req.body;
 
-        if (typeof cow_id !== "string" ||
-            cow_id.trim().length === 0 ||
-            typeof cow_name !== "string" ||
-            cow_name.trim().length === 0 ||
-            cow_name.length > 100) {
-            return res.status(400).json({
-                messege: "Invalid Details of Cows"
-            });
-        }
-
-        const sql = `
-            INSERT INTO cows
-            (cow_id, cow_name, date_of_birth,
-             birth_date_is_estimated, breed, description, farm_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `;
-
-        await db.query(sql, [
-            cow_id.trim(),
-            cow_name.trim(),
-            date_of_birth || null,
-            birth_date_is_estimated ? 1 : 0,
-            breed || null,
-            description || null,
-            farmId
-        ]);
-
-        res.status(201).json({
-            messege: "cow registered succesfully..."
-        });
-
-    } catch (error) {
-        console.log(error);
-
-        if (error.code === "ER_DUP_ENTRY") {
-            return res.status(409).json({
-                message: "Cow ID already exists"
-            });
-        }
-
-        res.status(500).json({
-            message: "Failed to register cow"
-        });
+    if (!cow_id || !cow_name) {
+      return res.status(400).json({ message: "Cow Tag/ID and Name are required" });
     }
+
+    const sql = `
+      INSERT INTO cows (cow_id, cow_name, date_of_birth, birth_date_is_estimated, breed, description, farm_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    await db.query(sql, [
+      cow_id.trim(),
+      cow_name.trim(),
+      date_of_birth || null,
+      birth_date_is_estimated ? 1 : 0,
+      breed?.trim() || null,
+      description?.trim() || null,
+      farmId
+    ]);
+
+    res.status(201).json({ message: "Cow registered successfully" });
+  } catch (error) {
+    console.error("Error adding cow:", error);
+    if (error.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({ message: "Cow ID already exists" });
+    }
+    res.status(500).json({ message: "Failed to register cow" });
+  }
 };
 
-// Fetch cows belonging only to logged-in farm
-const getAllCow = async (req, res) => {
-    const farmId = getFarmId(req, res);
-    if (farmId === null) return;
+// 2. Get all cows for the logged-in farm
+export const getAllCow = async (req, res) => {
+  const farmId = getFarmId(req, res);
+  if (farmId === null) return;
 
-    try {
-        const sql = "SELECT * FROM cows WHERE farm_id = ?";
-        const [result] = await db.query(sql, [farmId]);
-
-        res.status(200).send(result);
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            message: "Failed to fetch cows"
-        });
-    }
+  try {
+    const sql = "SELECT * FROM cows WHERE farm_id = ? ORDER BY cow_name ASC";
+    const [cows] = await db.query(sql, [farmId]);
+    res.status(200).json(cows);
+  } catch (error) {
+    console.error("Error fetching cows:", error);
+    res.status(500).json({ message: "Failed to fetch cows" });
+  }
 };
 
-// Fetch one cow belonging to logged-in farm
-const getCowById = async (req, res) => {
-    const farmId = getFarmId(req, res);
-    if (farmId === null) return;
+// 3. Get a single cow by ID
+export const getCowById = async (req, res) => {
+  const farmId = getFarmId(req, res);
+  if (farmId === null) return;
 
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
+    const sql = "SELECT * FROM cows WHERE cow_id = ? AND farm_id = ?";
+    const [rows] = await db.query(sql, [id, farmId]);
 
-        const sql = `
-            SELECT * FROM cows
-            WHERE cow_id = ? AND farm_id = ?
-        `;
-
-        const [result] = await db.query(sql, [id, farmId]);
-
-        if (result.length === 0) {
-            return res.status(404).json({
-                message: "Cow not found"
-            });
-        }
-
-        res.send({ messege: result });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            message: "Failed to fetch cows"
-        });
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Cow not found" });
     }
+
+    res.status(200).json(rows[0]);
+  } catch (error) {
+    console.error("Error fetching cow:", error);
+    res.status(500).json({ message: "Failed to fetch cow" });
+  }
 };
 
-// Update only a cow belonging to logged-in farm
-const updateCow = async (req, res) => {
-    const farmId = getFarmId(req, res);
-    if (farmId === null) return;
+// 4. Update cow details
+export const updateCow = async (req, res) => {
+  const farmId = getFarmId(req, res);
+  if (farmId === null) return;
 
-    try {
-        const { id } = req.params;
-        const {
-            cow_name,
-            date_of_birth,
-            birth_date_is_estimated,
-            breed,
-            description
-        } = req.body;
+  try {
+    const { id } = req.params;
+    const { cow_name, date_of_birth, birth_date_is_estimated, breed, description } = req.body;
 
-        if (typeof cow_name !== "string" ||
-            cow_name.trim().length === 0 ||
-            cow_name.length > 100) {
-            return res.status(400).json({
-                message: "Valid Cow Name is required"
-            });
-        }
-
-        const sql = `
-            UPDATE cows
-            SET cow_name = ?,
-                date_of_birth = ?,
-                birth_date_is_estimated = ?,
-                breed = ?,
-                description = ?
-            WHERE cow_id = ? AND farm_id = ?
-        `;
-
-        const [result] = await db.query(sql, [
-            cow_name.trim(),
-            date_of_birth || null,
-            birth_date_is_estimated ? 1 : 0,
-            breed || null,
-            description || null,
-            id,
-            farmId
-        ]);
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({
-                message: "Cow not found"
-            });
-        }
-
-        res.status(200).json({
-            message: "Cow updated successfully"
-        });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            message: "Failed to update cow"
-        });
+    if (!cow_name) {
+      return res.status(400).json({ message: "Cow Name is required" });
     }
+
+    const sql = `
+      UPDATE cows
+      SET cow_name = ?,
+          date_of_birth = ?,
+          birth_date_is_estimated = ?,
+          breed = ?,
+          description = ?
+      WHERE cow_id = ? AND farm_id = ?
+    `;
+
+    const [result] = await db.query(sql, [
+      cow_name.trim(),
+      date_of_birth || null,
+      birth_date_is_estimated ? 1 : 0,
+      breed?.trim() || null,
+      description?.trim() || null,
+      id,
+      farmId
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Cow not found" });
+    }
+
+    res.status(200).json({ message: "Cow updated successfully" });
+  } catch (error) {
+    console.error("Error updating cow:", error);
+    res.status(500).json({ message: "Failed to update cow" });
+  }
 };
 
-// Delete only a cow belonging to logged-in farm
-const deleteCow = async (req, res) => {
-    const farmId = getFarmId(req, res);
-    if (farmId === null) return;
+// 5. Delete a cow
+export const deleteCow = async (req, res) => {
+  const farmId = getFarmId(req, res);
+  if (farmId === null) return;
 
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
+    const sql = "DELETE FROM cows WHERE cow_id = ? AND farm_id = ?";
+    const [result] = await db.query(sql, [id, farmId]);
 
-        const sql = `
-            DELETE FROM cows
-            WHERE cow_id = ? AND farm_id = ?
-        `;
-
-        const [result] = await db.query(sql, [id, farmId]);
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({
-                message: "Cow not found"
-            });
-        }
-
-        res.status(200).json({
-            message: "Cow deleted successfully"
-        });
-
-    } catch (error) {
-        console.log(error);
-
-        if (error.code === "ER_ROW_IS_REFERENCED_2") {
-            return res.status(409).json({
-                message: "Cannot delete cow with existing breeding records"
-            });
-        }
-
-        res.status(500).json({
-            message: "Failed to delete cow"
-        });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Cow not found" });
     }
-};
 
-export {
-    addCow,
-    getAllCow,
-    getCowById,
-    updateCow,
-    deleteCow
+    res.status(200).json({ message: "Cow deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting cow:", error);
+    res.status(500).json({ message: "Failed to delete cow" });
+  }
 };

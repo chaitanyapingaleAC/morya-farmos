@@ -5,8 +5,6 @@ import dotenv from "dotenv";
 import db from "./config/db.js";
 import cowRoutes from "./routes/cowRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
-import breedingRoutes from "./routes/breedingRoutes.js";
-import milkRoutes from "./routes/milkRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
@@ -32,52 +30,39 @@ app.use(
 );
 app.use(express.json());
 
-// Cow Management API
+// Main Application APIs
 app.use("/api/cows", cowRoutes);
-
-// Expense Management API
 app.use("/api/expenses", expenseRoutes);
-
-// Breeding Management API
-app.use("/api/breeding", breedingRoutes);
-
-// Milk Production & Sales API
-app.use("/api/milk", milkRoutes);
-
-// Authentication API
 app.use("/api/auth", authRoutes);
-
-// Super Admin Management API
 app.use("/api/admin", adminRoutes);
 
-// Backend test
+// Backend health check
 app.get("/api/test", (req, res) => {
-    res.json({
-        message: "Morya FarmCare backend is running"
-    });
+  res.json({
+    message: "Morya FarmCare backend is running"
+  });
 });
 
 // Database connection test
 app.get("/api/db-test", async (req, res) => {
-    try {
-        const [rows] = await db.query("SELECT 1 AS result");
-
-        res.json({
-            success: true,
-            message: "MySQL database connected successfully",
-            data: rows[0]
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Database query failed",
-            error: error.message
-        });
-    }
+  try {
+    const [rows] = await db.query("SELECT 1 AS result");
+    res.json({
+      success: true,
+      message: "MySQL database connected successfully",
+      data: rows[0]
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Database query failed",
+      error: error.message
+    });
+  }
 });
 
 const port = process.env.PORT || 5000;
 
 app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server running on http://localhost:${port}`);
 });

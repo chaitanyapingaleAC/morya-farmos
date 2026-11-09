@@ -1,220 +1,315 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { List, Wallet, Plus, ArrowRight } from "lucide-react";
 
-function Dashboard() {
-    const [cows, setCows] = useState([]);
-    const [expenses, setExpenses] = useState([]);
-    const [milkRecords, setMilkRecords] = useState([]);
-    const [loading, setLoading] = useState(true);
+export default function Dashboard() {
+  const [cows, setCows] = useState([]);
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    // Monthly selector (default: current YYYY-MM, e.g. 2026-11)
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        const token = sessionStorage.getItem("authToken");
+        const headers = { Authorization: `Bearer ${token}` };
 
-    useEffect(() => {
-        const loadDashboard = async () => {
-            try {
-                const token = sessionStorage.getItem("authToken");
-                const headers = { Authorization: `Bearer ${token}` };
+        const [cowRes, expRes] = await Promise.all([
+          fetch("http://localhost:5000/api/cows", { headers }),
+          fetch("http://localhost:5000/api/expenses", { headers })
+        ]);
 
-                const [cowRes, expRes, milkRes] = await Promise.all([
-                    fetch("http://localhost:5000/api/cows", { headers }),
-                    fetch("http://localhost:5000/api/expenses", { headers }),
-                    fetch("http://localhost:5000/api/milk", { headers }).catch(() => null)
-                ]);
+        if (cowRes.ok) {
+          const cowData = await cowRes.json();
+          setCows(Array.isArray(cowData) ? cowData : []);
+        }
 
-                if (cowRes.ok) {
-                    const cowData = await cowRes.json();
-                    setCows(Array.isArray(cowData) ? cowData : []);
-                }
+        if (expRes.ok) {
+          const expData = await expRes.json();
+          setExpenses(expData.data || []);
+        }
+      } catch (err) {
+        console.error("Dashboard data load error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-                if (expRes.ok) {
-                    const expData = await expRes.json();
-                    setExpenses(expData.data || []);
-                }
+    loadDashboardData();
+  }, []);
 
-                if (milkRes && milkRes.ok) {
-                    const milkData = await milkRes.json();
-                    setMilkRecords(milkData.data || []);
-                }
-            } catch (err) {
-                console.error("Dashboard load error:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
+  // Calculate total expense amount
+  const totalExpenseAmount = expenses.reduce(
+    (sum, exp) => sum + Number(exp.amount || 0),
+    0
+  );
 
-        loadDashboard();
-    }, []);
+  if (loading) {
+    return <p style={{ padding: "30px", color: "#666" }}>Loading farm overview...</p>;
+  }
 
-    // Filter by selected month
-    const monthlyMilk = milkRecords.filter((m) =>
-        String(m.record_date).startsWith(selectedMonth)
-    );
-    const monthlyExpenses = expenses.filter((e) =>
-        String(e.expense_date).startsWith(selectedMonth)
-    );
-
-    // Calculate monthly totals
-    const totalMilkLitres = monthlyMilk.reduce((sum, m) => sum + Number(m.quantity || 0), 0);
-    const totalMilkIncome = monthlyMilk.reduce((sum, m) => sum + Number(m.amount || 0), 0);
-    const totalExpenseAmount = monthlyExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
-    const netProfit = totalMilkIncome - totalExpenseAmount;
-
-    if (loading) return <p style={{ padding: "20px" }}>Loading dashboard...</p>;
-
-    return (
-        <div style={{ padding: "25px", maxWidth: "1200px", margin: "auto" }}>
-            {/* Header + Month Selector */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
-                <div>
-                    <h1 style={{ color: "#173d32", margin: 0 }}>Monthly Farm Dashboard</h1>
-                    <p style={{ color: "#666", margin: "4px 0 0" }}>Monthly production, income, and expenditure</p>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "#fff", padding: "6px 12px", borderRadius: "8px", border: "1px solid #ccc" }}>
-                        <span style={{ fontSize: "13px", fontWeight: "bold" }}>Select Month:</span>
-                        <input
-                            type="month"
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(e.target.value)}
-                            style={{ border: "none", outline: "none", fontSize: "14px", fontWeight: "bold", color: "#173d32" }}
-                        />
-                    </div>
-
-                    <Link to="/milk" style={{ background: "#0284c7", color: "#fff", padding: "8px 12px", borderRadius: "6px", textDecoration: "none", fontSize: "13px", fontWeight: "bold" }}>
-                        + Log Milk
-                    </Link>
-                    <Link to="/expenses" style={{ background: "#4f46e5", color: "#fff", padding: "8px 12px", borderRadius: "6px", textDecoration: "none", fontSize: "13px", fontWeight: "bold" }}>
-                        + Add Expense
-                    </Link>
-                </div>
-            </div>
-
-            {/* Monthly KPI Summary Cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginBottom: "25px" }}>
-                {/* Total Cows */}
-                <div style={{ background: "#ffffff", padding: "18px", borderRadius: "10px", boxShadow: "0 2px 6px rgba(0,0,0,0.06)", borderLeft: "5px solid #173d32" }}>
-                    <span style={{ color: "#666", fontSize: "13px" }}>Total Cattle</span>
-                    <h2 style={{ color: "#173d32", margin: "6px 0 0" }}>{cows.length} Cows</h2>
-                </div>
-
-                {/* Monthly Milk Yield */}
-                <div style={{ background: "#ffffff", padding: "18px", borderRadius: "10px", boxShadow: "0 2px 6px rgba(0,0,0,0.06)", borderLeft: "5px solid #0284c7" }}>
-                    <span style={{ color: "#666", fontSize: "13px" }}>Milk Yield ({selectedMonth})</span>
-                    <h2 style={{ color: "#0284c7", margin: "6px 0 0" }}>{totalMilkLitres.toFixed(1)} L</h2>
-                </div>
-
-                {/* Monthly Milk Income */}
-                <div style={{ background: "#ffffff", padding: "18px", borderRadius: "10px", boxShadow: "0 2px 6px rgba(0,0,0,0.06)", borderLeft: "5px solid #15803d" }}>
-                    <span style={{ color: "#666", fontSize: "13px" }}>Milk Income ({selectedMonth})</span>
-                    <h2 style={{ color: "#15803d", margin: "6px 0 0" }}>₹{totalMilkIncome.toLocaleString("en-IN")}</h2>
-                </div>
-
-                {/* Monthly Expenditure */}
-                <div style={{ background: "#ffffff", padding: "18px", borderRadius: "10px", boxShadow: "0 2px 6px rgba(0,0,0,0.06)", borderLeft: "5px solid #b91c1c" }}>
-                    <span style={{ color: "#666", fontSize: "13px" }}>Expenditure ({selectedMonth})</span>
-                    <h2 style={{ color: "#b91c1c", margin: "6px 0 0" }}>₹{totalExpenseAmount.toLocaleString("en-IN")}</h2>
-                </div>
-            </div>
-
-            {/* Monthly Profit / Loss Banner */}
-            <div style={{
-                background: netProfit >= 0 ? "#f0fdf4" : "#fef2f2",
-                border: netProfit >= 0 ? "1px solid #86efac" : "1px solid #fca5a5",
-                padding: "16px 20px",
-                borderRadius: "10px",
-                marginBottom: "25px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "10px"
-            }}>
-                <div>
-                    <strong style={{ color: netProfit >= 0 ? "#166534" : "#991b1b", fontSize: "16px" }}>
-                        {netProfit >= 0 ? "✓ Monthly Net Profit" : "⚠ Monthly Net Deficit"} ({selectedMonth})
-                    </strong>
-                    <p style={{ margin: "4px 0 0", color: "#666", fontSize: "13px" }}>
-                        Milk Income (₹{totalMilkIncome.toLocaleString("en-IN")}) minus Expenditure (₹{totalExpenseAmount.toLocaleString("en-IN")})
-                    </p>
-                </div>
-                <h2 style={{ color: netProfit >= 0 ? "#15803d" : "#b91c1c", margin: 0 }}>
-                    {netProfit >= 0 ? "+" : ""}₹{netProfit.toLocaleString("en-IN")}
-                </h2>
-            </div>
-
-            {/* Side-by-Side Monthly Tables */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
-                {/* Monthly Milk Records */}
-                <div style={{ background: "#ffffff", padding: "20px", borderRadius: "10px", boxShadow: "0 2px 6px rgba(0,0,0,0.06)" }}>
-                    <h3 style={{ color: "#173d32", marginBottom: "12px" }}>
-                        Milk Records for {selectedMonth} ({monthlyMilk.length})
-                    </h3>
-                    {monthlyMilk.length === 0 ? (
-                        <p style={{ color: "#777", fontSize: "13px" }}>No milk records for this month.</p>
-                    ) : (
-                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                            <thead>
-                                <tr style={{ background: "#f8f9fa", textAlign: "left" }}>
-                                    <th style={{ padding: "8px" }}>Date</th>
-                                    <th style={{ padding: "8px" }}>Session</th>
-                                    <th style={{ padding: "8px" }}>Quantity</th>
-                                    <th style={{ padding: "8px" }}>Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {monthlyMilk.slice(0, 6).map((m) => (
-                                    <tr key={m.record_id} style={{ borderBottom: "1px solid #eee" }}>
-                                        <td style={{ padding: "8px" }}>{String(m.record_date).slice(0, 10)}</td>
-                                        <td style={{ padding: "8px" }}>{m.session}</td>
-                                        <td style={{ padding: "8px", fontWeight: "bold", color: "#0284c7" }}>
-                                            {Number(m.quantity).toFixed(1)} L
-                                        </td>
-                                        <td style={{ padding: "8px", fontWeight: "bold", color: "#15803d" }}>
-                                            ₹{Number(m.amount || 0).toLocaleString("en-IN")}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
-
-                {/* Monthly Expenses */}
-                <div style={{ background: "#ffffff", padding: "20px", borderRadius: "10px", boxShadow: "0 2px 6px rgba(0,0,0,0.06)" }}>
-                    <h3 style={{ color: "#173d32", marginBottom: "12px" }}>
-                        Expenses for {selectedMonth} ({monthlyExpenses.length})
-                    </h3>
-                    {monthlyExpenses.length === 0 ? (
-                        <p style={{ color: "#777", fontSize: "13px" }}>No expenses for this month.</p>
-                    ) : (
-                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                            <thead>
-                                <tr style={{ background: "#f8f9fa", textAlign: "left" }}>
-                                    <th style={{ padding: "8px" }}>Date</th>
-                                    <th style={{ padding: "8px" }}>Category</th>
-                                    <th style={{ padding: "8px" }}>Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {monthlyExpenses.slice(0, 6).map((e) => (
-                                    <tr key={e.expense_id} style={{ borderBottom: "1px solid #eee" }}>
-                                        <td style={{ padding: "8px" }}>{String(e.expense_date).slice(0, 10)}</td>
-                                        <td style={{ padding: "8px" }}>{e.category}</td>
-                                        <td style={{ padding: "8px", fontWeight: "bold", color: "#b91c1c" }}>
-                                            ₹{Number(e.amount).toLocaleString("en-IN")}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
-            </div>
+  return (
+    <div style={{ padding: "24px", maxWidth: "1200px", margin: "auto" }}>
+      {/* Header and Quick Action Buttons */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "24px",
+          flexWrap: "wrap",
+          gap: "12px"
+        }}
+      >
+        <div>
+          <h1 style={{ color: "#173d32", margin: 0, fontSize: "26px" }}>Farm Overview Dashboard</h1>
+          <p style={{ color: "#666", margin: "4px 0 0", fontSize: "14px" }}>
+            Summary of your cattle herd and farm expenses
+          </p>
         </div>
-    );
-}
 
-export default Dashboard;
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <Link
+            to="/cows"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "#173d32",
+              color: "#fff",
+              padding: "9px 16px",
+              borderRadius: "8px",
+              textDecoration: "none",
+              fontSize: "13px",
+              fontWeight: "600"
+            }}
+          >
+            <Plus size={16} /> Manage Cattle
+          </Link>
+          <Link
+            to="/expenses"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "#4f46e5",
+              color: "#fff",
+              padding: "9px 16px",
+              borderRadius: "8px",
+              textDecoration: "none",
+              fontSize: "13px",
+              fontWeight: "600"
+            }}
+          >
+            <Plus size={16} /> Manage Expenses
+          </Link>
+        </div>
+      </div>
+
+      {/* KPI Summary Cards */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+          gap: "18px",
+          marginBottom: "28px"
+        }}
+      >
+        {/* Total Cattle Card */}
+        <div
+          style={{
+            background: "#ffffff",
+            padding: "20px",
+            borderRadius: "10px",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
+            borderLeft: "5px solid #173d32"
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ color: "#666", fontSize: "14px", fontWeight: "500" }}>Total Cattle</span>
+            <List size={22} color="#173d32" />
+          </div>
+          <h2 style={{ color: "#173d32", margin: "10px 0 0", fontSize: "28px" }}>
+            {cows.length} <span style={{ fontSize: "16px", fontWeight: "normal", color: "#666" }}>Cows</span>
+          </h2>
+        </div>
+
+        {/* Total Expenses Card */}
+        <div
+          style={{
+            background: "#ffffff",
+            padding: "20px",
+            borderRadius: "10px",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
+            borderLeft: "5px solid #b91c1c"
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ color: "#666", fontSize: "14px", fontWeight: "500" }}>Total Expenses</span>
+            <Wallet size={22} color="#b91c1c" />
+          </div>
+          <h2 style={{ color: "#b91c1c", margin: "10px 0 0", fontSize: "28px" }}>
+            ₹{totalExpenseAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </h2>
+        </div>
+
+        {/* Total Expense Records Card */}
+        <div
+          style={{
+            background: "#ffffff",
+            padding: "20px",
+            borderRadius: "10px",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
+            borderLeft: "5px solid #4f46e5"
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ color: "#666", fontSize: "14px", fontWeight: "500" }}>Expense Entries</span>
+            <span style={{ background: "#eef2ff", color: "#4f46e5", padding: "3px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: "bold" }}>
+              Active
+            </span>
+          </div>
+          <h2 style={{ color: "#4f46e5", margin: "10px 0 0", fontSize: "28px" }}>
+            {expenses.length} <span style={{ fontSize: "16px", fontWeight: "normal", color: "#666" }}>Records</span>
+          </h2>
+        </div>
+      </div>
+
+      {/* Side-by-Side Recent Records Tables */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
+          gap: "24px"
+        }}
+      >
+        {/* Recent Cows */}
+        <div
+          style={{
+            background: "#ffffff",
+            padding: "22px",
+            borderRadius: "10px",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.06)"
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "16px"
+            }}
+          >
+            <h3 style={{ color: "#173d32", margin: 0, fontSize: "17px" }}>Registered Cattle ({cows.length})</h3>
+            <Link
+              to="/cows"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                color: "#173d32",
+                fontSize: "13px",
+                fontWeight: "600",
+                textDecoration: "none"
+              }}
+            >
+              View all <ArrowRight size={14} />
+            </Link>
+          </div>
+
+          {cows.length === 0 ? (
+            <p style={{ color: "#777", fontSize: "14px" }}>No cattle registered yet.</p>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+              <thead>
+                <tr style={{ background: "#f8f9fa", textAlign: "left", color: "#555" }}>
+                  <th style={{ padding: "9px" }}>Tag / ID</th>
+                  <th style={{ padding: "9px" }}>Name</th>
+                  <th style={{ padding: "9px" }}>Breed</th>
+                  <th style={{ padding: "9px" }}>Birth Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cows.slice(0, 5).map((cow) => (
+                  <tr key={cow.cow_id} style={{ borderBottom: "1px solid #eee" }}>
+                    <td style={{ padding: "9px", fontWeight: "bold", color: "#173d32" }}>
+                      #{cow.cow_id}
+                    </td>
+                    <td style={{ padding: "9px" }}>{cow.cow_name}</td>
+                    <td style={{ padding: "9px", color: "#666" }}>{cow.breed || "—"}</td>
+                    <td style={{ padding: "9px", color: "#666" }}>
+                      {cow.date_of_birth ? String(cow.date_of_birth).slice(0, 10) : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Recent Expenses */}
+        <div
+          style={{
+            background: "#ffffff",
+            padding: "22px",
+            borderRadius: "10px",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.06)"
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "16px"
+            }}
+          >
+            <h3 style={{ color: "#173d32", margin: 0, fontSize: "17px" }}>Recent Expenses ({expenses.length})</h3>
+            <Link
+              to="/expenses"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                color: "#4f46e5",
+                fontSize: "13px",
+                fontWeight: "600",
+                textDecoration: "none"
+              }}
+            >
+              View all <ArrowRight size={14} />
+            </Link>
+          </div>
+
+          {expenses.length === 0 ? (
+            <p style={{ color: "#777", fontSize: "14px" }}>No expenses recorded yet.</p>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+              <thead>
+                <tr style={{ background: "#f8f9fa", textAlign: "left", color: "#555" }}>
+                  <th style={{ padding: "9px" }}>Date</th>
+                  <th style={{ padding: "9px" }}>Category</th>
+                  <th style={{ padding: "9px" }}>Payment</th>
+                  <th style={{ padding: "9px" }}>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {expenses.slice(0, 5).map((exp) => (
+                  <tr key={exp.expense_id} style={{ borderBottom: "1px solid #eee" }}>
+                    <td style={{ padding: "9px" }}>
+                      {String(exp.expense_date).slice(0, 10)}
+                    </td>
+                    <td style={{ padding: "9px" }}>{exp.category}</td>
+                    <td style={{ padding: "9px", color: "#666" }}>{exp.payment_mode}</td>
+                    <td style={{ padding: "9px", fontWeight: "bold", color: "#b91c1c" }}>
+                      ₹{Number(exp.amount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
